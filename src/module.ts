@@ -8,7 +8,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOption
       path: 'apiUrl',
       name: 'Ollama API URL',
       description: 'Your Ollama server API URL.',
-      defaultValue: ''
+      defaultValue: 'http://localhost:11434/api/generate'
     })   
     .addTextInput({
       path: 'model',
@@ -16,6 +16,11 @@ export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOption
       description: 'The model to use in ollama',
       defaultValue: ''
     })
+    .addBooleanSwitch({
+      path: 'showDataSend',
+      name: 'Show data send to LLM',
+      defaultValue: false,
+    })    
     .addTextInput({
       path: 'panelContext',
       name: 'Panel Context',

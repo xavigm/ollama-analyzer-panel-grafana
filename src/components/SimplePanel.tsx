@@ -38,9 +38,9 @@ const getStyles = () => ({
 });
 
 const analysisOptions: { [key: string]: string } = {
-  Resumen: `Hazme un resumen de lo que ves.`,
-  Tendencias: `¿Qué tendencias ves?`,
-  Pico: `Dime cual es el momento de pico de esta metrica.`,
+  Summary: `Task - Give me a summary of the behavior.\n`,
+  Trends: `Task - Analyze the behavior and describe the trend \n`,
+  Peak: `Task - When this metric peaks? \n`,
   Custom: '', // vacío, lo escribe el usuario
 };
 
@@ -66,7 +66,7 @@ const dataToCSV = (data: Props['data'], selectedSeriesIndex: number): string => 
 export const SimplePanel: React.FC<Props> = ({ options, width, height, data }) => {
   const styles = useStyles2(getStyles);
 
-  const [buttonText, setButtonText] = useState('Analizar con IA');
+  const [buttonText, setButtonText] = useState('Analyze with AI');
   const [buttonEnabled, setButtonEnabled] = useState(true);
   const [analysisText, setAnalysisText] = useState('');
   const [csvMarkdown, setCsvMarkdown] = useState('');
@@ -99,17 +99,18 @@ export const SimplePanel: React.FC<Props> = ({ options, width, height, data }) =
 
   const onButtonClick = async () => {
     try {
-      setButtonText('Analizando...');
+      setButtonText('Analyzing...');
       setButtonEnabled(false);
 
       const csvData = dataToCSV(data, selectedSeriesIndex);
       setCsvMarkdown(`\`\`\`csv\n${csvData}\n\`\`\``);
 
-      const context1 = `Eres un analista de metricas de Grafana. No devuelvas tiempos en timestamp, siempre en fecha legible. Revisa la tendencia, lo que ves, y responde con un analisis y lo que puede estar ocurriendo\n`;
-      const context2 = `Las metricas son de ${options.panelContext}. Por tanto los valores son timestamp y % de CPU. \n`;
-      const csvData1 = `Aquí tienes los datos brutos en CSV:\n${csvData}\n`;
-      const language = `Responde en Español\n`;
-      const fullPrompt = `${context1}${context2}${prompt}${csvData1}${language}`;
+      const context1 = `- Don't return times in timestamps, always return them in human-readable dates.\n`;
+      const context2 = `Context: - The metrics correspond to ${options.panelContext}.\n`;
+      const csvData1 = `Here is the raw data in CSV:\n${csvData}\n`;
+      //const language = `Responde en Español\n`;
+      //const fullPrompt = `${context1}${context2}${prompt}${csvData1}${language}`;
+      const fullPrompt = `${csvData1}${context1}${context2}${prompt}`;
       console.log(fullPrompt);
 
       const response = await fetch(options.apiUrl || 'http://localhost:11434/api/generate', {
@@ -125,13 +126,13 @@ export const SimplePanel: React.FC<Props> = ({ options, width, height, data }) =
       const json = await response.json();
       const content = json.response || 'No response from model.';
       setAnalysisText(content);
-      setButtonText('Analizar con IA');
+      setButtonText('Analyze with AI');
       setButtonEnabled(true);
     } catch (err) {
       console.error('❌ Error:', err);
-      setAnalysisText('Error al generar el análisis.');
+      setAnalysisText('Error generating analysis.');
       setCsvMarkdown('');
-      setButtonText('Analizar con IA');
+      setButtonText('Analyze with AI');
       setButtonEnabled(true);
     }
   };
@@ -178,7 +179,7 @@ export const SimplePanel: React.FC<Props> = ({ options, width, height, data }) =
 
         {selectedOption === 'Custom' && (
           <textarea
-            placeholder="Escribe tu propio prompt..."
+            placeholder="Write your own prompt..."
             value={customPrompt}
             onChange={handleCustomPromptChange}
             rows={3}
@@ -196,9 +197,9 @@ export const SimplePanel: React.FC<Props> = ({ options, width, height, data }) =
       </div>
 
       {/* Muestra del CSV */}
-      {csvMarkdown && (
+      {csvMarkdown && options.showDataSend && (
         <>
-          <div className={cx(styles.sectionTitle)}>📋 Datos:</div>
+          <div className={cx(styles.sectionTitle)}>📋 Data sent:</div>
           <ReactMarkdown className={cx(styles.outputText)}>{csvMarkdown}</ReactMarkdown>
         </>
       )}
@@ -206,7 +207,7 @@ export const SimplePanel: React.FC<Props> = ({ options, width, height, data }) =
       {/* Muestra de la respuesta IA */}
       {analysisText && (
         <>
-          <div className={cx(styles.sectionTitle)}>🧠 IA:</div>
+          <div className={cx(styles.sectionTitle)}>🧠 AI:</div>
           <ReactMarkdown className={cx(styles.outputText)}>{analysisText}</ReactMarkdown>
         </>
       )}
